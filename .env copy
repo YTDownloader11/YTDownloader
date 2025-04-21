@@ -1,0 +1,5 @@
+domain=youtube11.com
+port=11
+mmdbID=GET_To_https://maxmind.com
+mmdbKey=GET_To_https://www.maxmind.com/en/accounts/Your_MaxMind_ID/license-key
+debug=False

@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta name="description" content="Youtube Downloader">
+    <meta name="keywords" content="youtube, downloader, 유튜브, 유튜브 다운로드">
+    <meta name="language" content="Korean">
+    <meta http-equiv="Content-Language" content="ko">
+    <meta property="og:title" content="{{ info['title'] }} Downloader">
+    <meta property="og:description" content="Youtube Downloader">
+    <meta property="og:image" content="{{ info['thumb'] }}">
+    <meta property="og:url" content="https://{{ domain }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Youtube Downloader">
+    <meta property="og:locale" content="ko">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ info['title'] }}</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .large-button {
+            width: 80px;
+            height: 50px;
+            margin: 0 40px;
+            font-size: 20px;
+            padding: 10px 10px;
+            border-radius: 10px;
+            border-color: #45a049;
+            border-style: solid;
+        }
+        .large-button:hover {
+            background-color: #45a049;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        alert("현재 개발중인 사이트 입니다. \n\nThis site is currently under development.")
+    </script>
+</head>
+<body style="background-color: pink;">
+    <h1 style="text-align:center; margin-top: 50px;">
+        <a target="_blank" style="text-decoration: none; color: purple;" href="https://youtu.be/{{ info['YTID'] }}">{{ info['title'] }}</a>
+    </h1>
+
+    <div id="loadingMessage" style="text-align:center; display:none; margin-top: 40px;">
+        <div class="spinner"></div>
+        <p id="progressText">처리 중입니다... 잠시만 기다려주세요 ⏳ <span id="progressPercent">0%</span></p>
+        <div id="progressBarContainer" style="width: 80%; height: 20px; background-color: #eee; border-radius: 10px; margin: 0 auto; overflow: hidden;">
+            <div id="progressBar" style="height: 100%; width: 0%; background-color: #4caf50; transition: width 0.3s ease;"></div>
+        </div>
+    </div>
+    <div style="text-align: center; gap: 40px; padding-top: 20px;">
+        <img class="image" src="{{ info['thumb'] }}" alt="{{ info['title'] }}">
+        <br><br>
+        <form style="text-align: center;">
+            <input id="infoJson" type="hidden" name="info" value='{{ info_json }}'>
+            {% set index = 0 %}
+            {% for h in hei %}
+                <button class="large-button" type="button" onclick="startDownload('{{ h }}')">{{ h }}p</button>
+                {% set index += 1 %}
+                {% if index % 2 == 0 %}
+                    <br><br>
+                {% end %}
+            {% end %}
+            <button class="large-button" type="button" onclick="startDownload(0)">mp3</button>
+            <br><br><br><br><br><br><br><br><br><br><h1>h1</h1>
+        </form>
+    </div>
+
+    <script>
+        async function startDownload(hei) {
+            document.getElementById('loadingMessage').style.display = "none";
+            document.querySelectorAll('.large-button').forEach(btn => {btn.disabled = true;});
+            const infoJson = document.getElementById('infoJson').value;
+            const formData = new FormData();
+            formData.append('hei', hei);
+            formData.append('info', infoJson);
+            try {
+                const response = await fetch(window.location.href, {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await response.json();
+                if (!result.job_id) {
+                    alert("작업 생성 실패: " + JSON.stringify(result));
+                    return;
+                }
+                document.getElementById('loadingMessage').style.display = "block";
+                checkStatus(result.job_id);
+            } catch (e) {
+                alert("요청 실패: " + e.message);
+            }
+        }
+
+        async function checkStatus(jobId) {
+            let failCount = 0; const maxFailCount = 10
+            const statusUrl = `/job_status?id=${jobId}`;
+            const checkInterval = setInterval(async () => {
+                const response = await fetch(statusUrl);
+                if (!response.ok) {
+                    failCount++;
+                    console.warn(`요청 실패 (${response.status}): ${failCount}/${maxFailCount}`);
+                    if (failCount >= maxFailCount) {
+                        const btns = document.querySelectorAll('.large-button');
+                        btns.forEach(function(btn) {
+                            btn.disabled = false;
+                        });
+                        clearInterval(checkInterval);
+                        document.querySelectorAll(".spinner").forEach(spinner => {spinner.style.display = "none";});
+                        document.getElementById("progressText").innerHTML = `<h1 style="color: red;">서버로부터 응답을 받을 수 없습니다. 작업이 중단되었습니다.</h1><h1 style="color: red;">Unable to receive response from server. Operation has been stoped.</h1>`
+                        alert("서버로부터 응답을 받을 수 없습니다. 작업이 중단되었습니다.\n\nUnable to receive response from server. Operation has been stoped.");
+                    }
+                    return;
+                }
+                const statusData = await response.json(); failCount = 0;
+                // 진행률이 있으면 표시
+                if (statusData.progress !== undefined) {
+                    const progress = Math.min(100, Math.max(0, parseInt(statusData.progress))); //0~100 보정
+                    document.getElementById("progressPercent").innerText = `${progress}%`;
+                    document.getElementById("progressBar").style.width = `${progress}%`;
+                }
+                if (statusData.status === "done") {
+                    clearInterval(checkInterval);
+                    window.location.href = statusData.result;
+                } else if (statusData.status === "error") {
+                    clearInterval(checkInterval);
+                    alert("처리 중 오류 발생: " + statusData.result);
+                } else {
+                    console.log("처리 중...");
+                }
+            }, 1000);
+        }
+    </script>
+
+    <script>
+        function rs() {
+            let w = window.outerWidth
+            let h = window.outerHeight
+            console.log(`${w} x ${h}`)
+            let img_resize = document.getElementsByClassName("image");
+            for (let i = 0; i < img_resize.length; i++) {
+                if (w > h) {
+                    img_resize[i].width = w / 2.5
+                } else {
+                    img_resize[i].width = w / 1.2
+                }
+            }
+        }
+        rs();
+        window.addEventListener("resize", rs);
+    </script>
+
+    <!-- <footer style="position: fixed; bottom: 0; width: 100%; background-color: greenyellow; text-align: center; padding: 2px;"> -->
+    <footer style="position: sticky; bottom: 0px; display: flex; justify-content: center; align-items: center; width: 100%;height: 40px; background-color: greenyellow;">
+        {{ domain }} powered 2025/04/14/Mon ~ {{ today[0] }} | In South Korea
+    </footer>
+</body>
+</html>

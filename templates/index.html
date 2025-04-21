@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta name="description" content="Youtube Downloader">
+    <meta name="keywords" content="youtube, downloader, 유튜브, 유튜브 다운로드">
+    <meta name="language" content="Korean">
+    <meta http-equiv="Content-Language" content="ko">
+    <meta property="og:title" content="Youtube Downloader">
+    <meta property="og:description" content="Youtube Downloader">
+    <meta property="og:image" content="https://youtube.com/favicon.ico">
+    <meta property="og:url" content="https://{{ domain }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Youtube Downloader">
+    <meta property="og:locale" content="ko">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Youtube Downloader</title>
+
+    <style>
+        .large-button {
+            width: 140px;
+            height: 50px;
+            font-size: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border-color: #45a049;
+            border-style: solid;
+        }
+        .large-button:hover {
+            background-color: #45a049;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        alert("현재 개발중인 사이트 입니다. \n\nThis site is currently under development.")
+    </script>
+</head>
+<body style="background-color: pink;">
+    <div style="text-align: center;">
+        <h2>유튜브 URL 입력</h2>
+        <form onsubmit="redirectToDownload(event)">
+            <input style="text-align: center; font-size: 20px; width: 444px; height: 44px;" type="text" id="YTURL" placeholder="Any Youtube URL">
+            <br><br>
+            <input class="large-button" type="submit" value="Download!">
+        </form>
+    </div>
+
+    <script>
+        function redirectToDownload(event) {
+            event.preventDefault();
+            var YTURL = document.getElementById("YTURL").value;
+            if (YTURL) {
+                const rd = new URL(YTURL); rd.host = "{{ domain }}";
+                window.location.href = rd.href;
+            } else {
+                alert("URL을 입력해주세요.\n\nInput URL");
+            }
+        }
+    </script>
+
+    <script>
+        function rs() {
+            let w = window.outerWidth
+            let h = window.outerHeight
+            console.log(`${w} x ${h}`)
+            let img_resize = document.getElementsByClassName("image");
+            for (let i = 0; i < img_resize.length; i++) {
+                if (w > h) {
+                    img_resize[i].width = w / 2.5
+                } else {
+                    img_resize[i].width = w / 1.2
+                }
+            }
+        }
+        rs();
+        window.addEventListener("resize", rs);
+    </script>
+
+    <footer style="position: sticky; bottom: 0px; display: flex; justify-content: center; align-items: center; width: 100%;height: 40px; background-color: greenyellow;">
+        {{ domain }} powered 2025/04/14/Mon ~ {{ today[0] }} | In South Korea
+    </footer>
+</body>
+</html>
