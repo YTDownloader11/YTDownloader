@@ -17,7 +17,7 @@ def make_app():
         (r"/(?:shorts/)?([\w-]{11})", IDHandler.handler),
         (r"/watch", IDHandler.handler),
         (r"/job_status", JobStatusHandler.handler),
-        (r"/raw/(.*)", rawHandler.handler),
+        (r"/raw/data/(.*)", rawHandler.handler),
 
         (r"/favicon.ico", FaviconHandler.handler),
         (r"/static/(.*)", StaticHandler.handler),
