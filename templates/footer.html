@@ -11,11 +11,13 @@
                 img_resize[i].width = w / 1.2
             }
         }
+        document.getElementById("footer-spacer").style.height = document.getElementById("page-footer").offsetHeight + "px";
     }
-    rs();
+    window.addEventListener("load", rs);
     window.addEventListener("resize", rs);
 </script>
 
-<footer style="position: sticky; bottom: 0px; display: flex; justify-content: center; align-items: center; width: 100%;height: 40px; background-color: greenyellow;">
+<div id="footer-spacer" style="height: 40px;"></div>
+<footer id="page-footer" style="position: fixed; bottom: 0px; display: flex; justify-content: center; align-items: center; width: 100%; height: 40px; background-color: greenyellow;">
     {{ domain }} powered 2025/04/14/Mon ~ {{ today[0] }} | In South Korea
 </footer>
