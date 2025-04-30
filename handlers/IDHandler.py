@@ -25,6 +25,7 @@ class handler(tornado.web.RequestHandler):
             if not (ID1 or ID2): self.write("NO")
             hei = int(self.get_body_argument("hei"))
             info = json.loads(self.get_body_argument("info"))
+            isdl = int(self.get_body_argument("isdl"))
 
             job_id = str(uuid.uuid4()) #job_id 생성
             config.job_status_map[job_id] = {"status": "pending", "result": None, "progress": 0}
@@ -35,7 +36,7 @@ class handler(tornado.web.RequestHandler):
                 try:
                     if hei: result = await asyncio.to_thread(saveVideo, ID1 or ID2, hei, info, job_id)
                     else: result = await asyncio.to_thread(saveAudio, ID1 or ID2, info, job_id)
-                    config.job_status_map[job_id]["status"] = "done"; config.job_status_map[job_id]["result"] = f"/raw/{result}"; config.job_status_map[job_id]["progress"] = 100
+                    config.job_status_map[job_id]["status"] = "done"; config.job_status_map[job_id]["result"] = f"/raw/{result}?dl={isdl}"; config.job_status_map[job_id]["progress"] = 100
                 except Exception as e:
                     config.job_status_map[job_id]["status"] = "error"; config.job_status_map[job_id]["result"] = str(e); config.job_status_map[job_id]["progress"] = -1
             asyncio.create_task(background_task())

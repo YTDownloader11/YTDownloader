@@ -16,6 +16,7 @@ try: #.env
     port = int(os.getenv("port"))
     mmdbID = os.getenv("mmdbID")
     mmdbKey = os.getenv("mmdbKey")
+    autoDelete = eval(os.getenv("autoDelete"))
     debug = eval(os.getenv("debug"))
 except: envchk()
 

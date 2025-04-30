@@ -28,7 +28,7 @@ def make_app():
 
 if __name__ == "__main__":
     getmmdb.dl()
-    folder_check()
+    folder_check(); autoDel()
     app = make_app()
     app.listen(config.port)
     log.info(f"Server Listen on http://localhost:{config.port} Port | OS = {'Windows' if config.OSisWindows else 'UNIX'}")

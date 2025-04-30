@@ -7,8 +7,8 @@
     <meta name="language" content="Korean">
     <meta http-equiv="Content-Language" content="ko">
     <meta property="og:title" content="{{ info['title'] }} Downloader">
-    <meta property="og:description" content="Youtube Downloader">
     <meta property="og:image" content="{{ info['thumb'] }}">
+    <meta property="og:description" content="Youtube Downloader">
     <meta property="og:url" content="https://{{ domain }}">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Youtube Downloader">
@@ -19,10 +19,11 @@
     <title>{{ info['title'] }}</title>
 
     <style>
-        body {
+        html, body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            height: 100%;
         }
         .large-button {
             width: 80px;
@@ -60,7 +61,7 @@
 </head>
 <body style="background-color: pink;">
     <h1 style="text-align:center; margin-top: 50px;">
-        <a target="_blank" style="text-decoration: none; color: purple;" href="https://youtu.be/{{ info['YTID'] }}">{{ info['title'] }}</a>
+        <a target="_blank" style="text-decoration: none; color: purple;" href="{{ info['YTURL'] }}">{{ info['title'] }}</a>
     </h1>
 
     <div id="loadingMessage" style="text-align:center; display:none; margin-top: 40px;">
@@ -75,27 +76,50 @@
         <br><br>
         <form style="text-align: center;">
             <input id="infoJson" type="hidden" name="info" value='{{ info_json }}'>
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 20px; gap: 20px;">
+                <span style="padding-left: 30px;">바로 다운로드 --></span>
+                <input type="checkbox" id="isdl" style="width: 40px; height: 40px;">
+                <span><-- Direct Download</span>
+            </div>
             {% set index = 0 %}
             {% for h in hei %}
-                <button class="large-button" type="button" onclick="startDownload('{{ h }}')">{{ h }}p</button>
+                <button class="large-button" type="button" onclick="scrollToTop(); startDownload('{{ h }}')">{{ h }}p</button>
                 {% set index += 1 %}
                 {% if index % 2 == 0 %}
                     <br><br>
                 {% end %}
             {% end %}
-            <button class="large-button" type="button" onclick="startDownload(0)">mp3</button>
+            <button class="large-button" type="button" onclick="scrollToTop(); startDownload(0)">mp3</button>
             <br><br><br><br><br><br><br><br><br><br><h1>h1</h1>
         </form>
     </div>
 
     <script>
+        function scrollToTop() {
+            const startTime = performance.now();
+            function smoothScroll(currentTime) {
+                const progress = Math.min((currentTime - startTime) / 30000, 1);
+                const scrollPosition = window.pageYOffset * (1 - progress);
+                window.scrollTo(0, scrollPosition);
+                // ★ 현재 스크롤 위치가 이미 0이면 즉시 종료
+                if (window.pageYOffset <= 0 || progress >= 1) {
+                    return;
+                }
+                requestAnimationFrame(smoothScroll);
+            }
+            requestAnimationFrame(smoothScroll);
+        }
+
         async function startDownload(hei) {
+            //window.scrollTo({top: 0, behavior: 'smooth'});
             document.getElementById('loadingMessage').style.display = "none";
             document.querySelectorAll('.large-button').forEach(btn => {btn.disabled = true;});
             const infoJson = document.getElementById('infoJson').value;
+            const isdl = document.getElementById('isdl').checked ? 1 : 0; //체크박스 상태 가져오기
             const formData = new FormData();
             formData.append('hei', hei);
             formData.append('info', infoJson);
+            formData.append('isdl', isdl);
             try {
                 const response = await fetch(window.location.href, {
                     method: "POST",
@@ -141,6 +165,8 @@
                     document.getElementById("progressBar").style.width = `${progress}%`;
                 }
                 if (statusData.status === "done") {
+                    document.querySelectorAll(".spinner").forEach(spinner => {spinner.style.display = "none";});
+                    document.getElementById("progressText").innerText = "Done! 100%"
                     clearInterval(checkInterval);
                     window.location.href = statusData.result;
                 } else if (statusData.status === "error") {
@@ -152,28 +178,7 @@
             }, 1000);
         }
     </script>
-
-    <script>
-        function rs() {
-            let w = window.outerWidth
-            let h = window.outerHeight
-            console.log(`${w} x ${h}`)
-            let img_resize = document.getElementsByClassName("image");
-            for (let i = 0; i < img_resize.length; i++) {
-                if (w > h) {
-                    img_resize[i].width = w / 2.5
-                } else {
-                    img_resize[i].width = w / 1.2
-                }
-            }
-        }
-        rs();
-        window.addEventListener("resize", rs);
-    </script>
-
-    <!-- <footer style="position: fixed; bottom: 0; width: 100%; background-color: greenyellow; text-align: center; padding: 2px;"> -->
-    <footer style="position: sticky; bottom: 0px; display: flex; justify-content: center; align-items: center; width: 100%;height: 40px; background-color: greenyellow;">
-        {{ domain }} powered 2025/04/14/Mon ~ {{ today[0] }} | In South Korea
-    </footer>
+    
+    {% include "footer.html" %}
 </body>
 </html>

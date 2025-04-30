@@ -1,0 +1,21 @@
+<script>
+    function rs() {
+        let w = window.outerWidth
+        let h = window.outerHeight
+        console.log(`${w} x ${h}`)
+        let img_resize = document.getElementsByClassName("image");
+        for (let i = 0; i < img_resize.length; i++) {
+            if (w > h) {
+                img_resize[i].width = w / 2.5
+            } else {
+                img_resize[i].width = w / 1.2
+            }
+        }
+    }
+    rs();
+    window.addEventListener("resize", rs);
+</script>
+
+<footer style="position: sticky; bottom: 0px; display: flex; justify-content: center; align-items: center; width: 100%;height: 40px; background-color: greenyellow;">
+    {{ domain }} powered 2025/04/14/Mon ~ {{ today[0] }} | In South Korea
+</footer>

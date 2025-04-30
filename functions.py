@@ -1,8 +1,11 @@
 import os
+import shutil
 import re
 import time
+from datetime import datetime
 import json
 import traceback
+import threading
 from helpers import logUtils as log
 from helpers import config
 import geoip2.database
@@ -125,12 +128,13 @@ def IDM22(self, path):
         idm = False
         with open(path, 'rb') as f: self.write(f.read())
     return idm
-def IDM(self, path):
+def IDM(self, path, dl = 0):
     IP = getIP(self)
     chunk_size = 1024 * 1024 # MB 청크
     filename = path.split("/")[-1]
     self.set_header('Content-Type', pathToContentType(path)["Content-Type"])
-    self.set_header('Content-Disposition', f'inline; filename="{filename}"')
+    dl = "inline" if not dl else "attachment"
+    self.set_header('Content-Disposition', f'{dl}; filename="{filename}"')
     self.set_header("Accept-Ranges", "bytes")
     if "Range" in self.request.headers:
         IDMConnects[IP] = 1 if not IDMConnects.get(IP) else IDMConnects[IP] + 1
@@ -227,6 +231,18 @@ def pathToContentType(path, isInclude=False):
 
 def folder_check(): os.makedirs("data", exist_ok=True)
 
+def autoDel():
+    def wk():
+        while config.autoDelete:
+            now = datetime.now()
+            if now.weekday() == 0 and now.hour == 0:
+                for d in os.listdir("data"):
+                    try: os.remove(f"data/{d}"); log.info(f"data/{d} 삭제완료!")
+                    except PermissionError: log.error(f"data/{d} 사용중임!")
+                    except: exceptionE(f"data/{d}")
+            time.sleep(1800)
+    threading.Thread(target=wk).start()
+
 #######################################################################################################################################
 
 def localtime(): return time.localtime()
@@ -236,17 +252,25 @@ def getYTID(YTLink: str) -> str:
     return re.match(YTURLPT, YTLink).group("YTID")
 
 def getInfo(YTID: str) -> dict:
-    with YoutubeDL({'quiet': True}) as ydl: info = ydl.extract_info(YTID, download=False)
+    with YoutubeDL({'quiet': True, 'cookies': 'cookies.txt'}) as ydl: info = ydl.extract_info(YTID, download=False)
     auInfo = 0; viInfo = {}
     for i in info.get('formats', []):
-        if not auInfo and i["audio_ext"] == "mp4": auInfo = i['format_id']
+        if i["audio_ext"] == "mp4": auInfo = i['format_id']
         elif i["video_ext"] == "mp4": viInfo[str(i["height"])] = i["format_id"]
-    return {"YTID": YTID, "viInfo": dict(reversed(viInfo.items())), "auInfo": auInfo, "title": f"{info.get('channel')} - {info.get('title')}", "thumb": info.get('thumbnail')}
+    return {
+        "YTID": YTID,
+        "YTURL": f"https://youtu.be/{YTID}",
+        "viInfo": dict(reversed(viInfo.items())),
+        "auInfo": auInfo,
+        "duration": info.get('duration'),
+        "title": f"{info.get('channel')} - {info.get('title')}",
+        "thumb": info.get('thumbnail')
+    }
 
 def saveVideo(YTID: str, hei: int, info: dict, job_id: str) -> str:
-    outtmpl = f'data/{YTID}_{hei}p.mp4'
+    outtmpl = f'data/{YTID}-{hei}p.mp4'
     if os.path.isfile(outtmpl): config.job_status_map[job_id] = {"status": "done", "result": outtmpl, "progress": 100}; return outtmpl
-    log.info(f"{YTID}_{hei}p 영상 다운로드 중...")
+    log.info(f"{outtmpl} 영상 다운로드 중...")
     """ def progress_hook(d):
         if d['status'] == 'downloading':
             total = d.get('total_bytes') or d.get('total_bytes_estimate') or 1
@@ -281,7 +305,8 @@ def saveVideo(YTID: str, hei: int, info: dict, job_id: str) -> str:
             'preferedformat': 'mp4'
         }],
         'progress_hooks': [progress_hook],
-        'quiet': False
+        'quiet': False,
+        'cookies': 'cookies.txt'
     }
     with YoutubeDL(ydl_opts) as ydl: ydl.download(YTID)
     config.job_status_map[job_id] = {"status": "processing", "result": None, "progress": 99}
@@ -300,7 +325,8 @@ def saveAudio(YTID: str, info: dict, job_id: str) -> str:
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
-        'quiet': False
+        'quiet': False,
+        'cookies': 'cookies.txt'
     }
     with YoutubeDL(ydl_opts) as ydl: ydl.download(YTID)
     return outtmpl

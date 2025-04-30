@@ -10,6 +10,7 @@ class handler(tornado.web.RequestHandler):
     async def get(self, file: str):
         try:
             request_msg(self)
-            try: IDM(self, f"data/{file}")
+            dl = int(self.get_argument("dl", 0))
+            try: IDM(self, f"data/{file}", dl)
             except FileNotFoundError: send404(self, [i for i in os.listdir("data") if file in i])
         finally: self.set_header("Ping", str(resPingMs(self)))
