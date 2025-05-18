@@ -2,7 +2,7 @@ yt-dlp===2024.12.23
 requests===2.32.3
 pyinstaller===6.11.1
 m3u8===6.0.0
-tornado===6.4.2
+tornado===6.5
 pydub===0.25.1
 geoip2===5.0.1
 python_dotenv===1.1.0
