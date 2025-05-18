@@ -354,7 +354,7 @@ def mp4Tomp3(path: str, ex_cmd: str, job_id: str):
     ffmpeg_msg = f'ffmpeg{"\\ffmpeg.exe" if config.OSisWindows else "/ffmpeg"} -i "{path}" {ex_cmd}-acodec libmp3lame {"-q:a 0 " if "-b:a" not in ex_cmd else ""}-y "{file}"'
     log.chat(f"ffmpeg_msg = {ffmpeg_msg}")
     process = subprocess.Popen(ffmpeg_msg, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, universal_newlines=True, bufsize=1)
-    AudioLength = float(mediainfo("data/ts.mp4")["duration"])
+    AudioLength = float(mediainfo(path)["duration"])
     for l in process.stderr:
         print(l, end='')
         if "size=" in l and "time=" in l and "bitrate=" in l and "speed=" in l:
