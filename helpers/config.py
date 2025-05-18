@@ -21,4 +21,4 @@ try: #.env
 except: envchk()
 
 #job
-job_status_map = {} #job_id -> {"status": "pending" | "done" | "error", "result": ...}
+job_status_map = {}

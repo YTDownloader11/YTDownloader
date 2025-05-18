@@ -10,6 +10,8 @@ from helpers import logUtils as log
 from helpers import config
 import geoip2.database
 from yt_dlp import YoutubeDL
+import subprocess
+from pydub.utils import mediainfo
 
 def exceptionE(msg=""): e = traceback.format_exc(); log.error(f"{msg} \n{e}"); return e
 
@@ -227,7 +229,20 @@ def pathToContentType(path, isInclude=False):
     else: ct, tp = ("application/octet-stream", "?")
     return {"Content-Type": ct, "foldername": fln, "fullFoldername": ffln, "filename": fn, "extension": fe, "fullFilename": fn + fe, "type": tp, "path": path}
 
+def timecode_to_seconds(timecode: str) -> float:
+    """
+    Converts a timecode in the format HH:MM:SS.ff to seconds (float).
+    """
+    try:
+        hh, mm, ss = timecode.split(":"); ss, ff = ss.split(".") if "." in ss else [ss, 0]
+        return float(f"{(int(hh) * 3600) + (int(mm) * 60) + int(ss)}.{ff}")
+    except ValueError: raise ValueError(f"Invalid timecode format: {timecode}")
+
 ####################################################################################################
+
+def windowsPath(path):
+    for a in ['<','>',':','"','/','\\','|','?','*']: path = path.replace(a, "_")
+    return path
 
 def folder_check(): os.makedirs("data", exist_ok=True)
 
@@ -235,7 +250,8 @@ def autoDel():
     def wk():
         while config.autoDelete:
             now = datetime.now()
-            if now.weekday() == 0 and now.hour == 0:
+            if now.weekday() == 0 and now.hour == 0 and now.minute == 0:
+                config.job_status_map = {}
                 for d in os.listdir("data"):
                     try: os.remove(f"data/{d}"); log.info(f"data/{d} 삭제완료!")
                     except PermissionError: log.error(f"data/{d} 사용중임!")
@@ -290,11 +306,11 @@ def saveVideo(YTID: str, hei: int, info: dict, job_id: str) -> str:
             if current_stage["step"] == "video": progress = int(raw_progress * 0.5)
             elif current_stage["step"] == "audio": progress = int(50 + raw_progress * 0.45)
             else: progress = 95
-            config.job_status_map[job_id] = {"status": "downloading", "result": None, "progress": progress}
+            config.job_status_map[job_id] = {"status": f"downloading {current_stage["step"]}", "result": None, "progress": progress}
 
         elif d['status'] == 'finished':
             if current_stage["step"] == "video": current_stage["step"] = "audio"  # 다음 단계로 전환
-            elif current_stage["step"] == "audio": config.job_status_map[job_id] = {"status": "processing", "result": None, "progress": 95}
+            elif current_stage["step"] == "audio": config.job_status_map[job_id] = {"status": "merging", "result": None, "progress": 95}
     ydl_opts = {
         "nocheckcertificate": True,
         'format': f"{info['viInfo'][str(hei)]}+{info['auInfo']}",
@@ -309,10 +325,11 @@ def saveVideo(YTID: str, hei: int, info: dict, job_id: str) -> str:
         'cookies': 'cookies.txt'
     }
     with YoutubeDL(ydl_opts) as ydl: ydl.download(YTID)
-    config.job_status_map[job_id] = {"status": "processing", "result": None, "progress": 99}
+    config.job_status_map[job_id] = {"status": "merging", "result": None, "progress": 99}
     return outtmpl
 
 def saveAudio(YTID: str, info: dict, job_id: str) -> str:
+    #TODO job_id 쓰기
     outtmpl = f'data/{YTID}.mp3'
     if os.path.isfile(outtmpl): return outtmpl
     log.info(f"{YTID} 음원 다운로드 중...")
@@ -330,3 +347,18 @@ def saveAudio(YTID: str, info: dict, job_id: str) -> str:
     }
     with YoutubeDL(ydl_opts) as ydl: ydl.download(YTID)
     return outtmpl
+
+def mp4Tomp3(path: str, ex_cmd: str, job_id: str):
+    extension = "." + path.split(".")[-1]; file = path.replace(extension, '.mp3')
+    #if os.path.isfile(file): config.job_status_map[job_id] = {"status": "done", "result": file, "progress": 100}; return file #비활성화
+    ffmpeg_msg = f'ffmpeg{"\\ffmpeg.exe" if config.OSisWindows else "/ffmpeg"} -i "{path}" {ex_cmd}-acodec libmp3lame {"-q:a 0 " if "-b:a" not in ex_cmd else ""}-y "{file}"'
+    log.chat(f"ffmpeg_msg = {ffmpeg_msg}")
+    process = subprocess.Popen(ffmpeg_msg, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, universal_newlines=True, bufsize=1)
+    AudioLength = float(mediainfo("data/ts.mp4")["duration"])
+    for l in process.stderr:
+        print(l, end='')
+        if "size=" in l and "time=" in l and "bitrate=" in l and "speed=" in l:
+            pro = timecode_to_seconds(l[l.find("time=")+5:].split(" ")[0])
+            progress = int(pro / AudioLength * 100)
+            config.job_status_map[job_id] = {"status": "processing", "result": None, "progress": progress}
+    return file

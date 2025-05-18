@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta name="description" content="Youtube Downloader">
+    <meta name="keywords" content="youtube, downloader, 유튜브, 유튜브 다운로드">
+    <meta name="language" content="Korean">
+    <meta http-equiv="Content-Language" content="ko">
+    <meta property="og:title" content="Youtube Downloader">
+    <meta property="og:description" content="Youtube Downloader">
+    <meta property="og:image" content="https://youtube.com/favicon.ico">
+    <meta property="og:url" content="https://{{ domain }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Youtube Downloader">
+    <meta property="og:locale" content="ko">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Youtube Downloader</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .large-button {
+            width: 90px;
+            height: 50px;
+            margin: 0 40px;
+            font-size: 20px;
+            padding: 10px 10px;
+            border-radius: 10px;
+            border-color: #45a049;
+            border-style: solid;
+        }
+        .large-button:hover {
+            background-color: #45a049;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .file-upload-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .file-label {
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: -20px;
+        }
+
+        .file-label:hover {
+            background-color: #45a049;
+        }
+
+        #file {
+            display: none;
+        }
+
+        #file-name {
+            font-size: 20px;
+            color: black;
+        }
+    </style>
+
+    <script>
+        alert("현재 개발중인 사이트 입니다. \n\nThis site is currently under development.")
+    </script>
+</head>
+<body style="background-color: pink;">
+    <div id="loadingMessage" style="text-align:center; display:none; margin-top: 40px;">
+        <div class="spinner"></div>
+        <p id="progressText">처리 중입니다... 잠시만 기다려주세요 ⏳ <span id="progressPercent">0%</span></p>
+        <div id="progressBarContainer" style="width: 80%; height: 20px; background-color: #eee; border-radius: 10px; margin: 0 auto; overflow: hidden;">
+            <div id="progressBar" style="height: 100%; width: 0%; background-color: #4caf50; transition: width 0.3s ease;"></div>
+        </div>
+    </div>
+
+    <div style="text-align: center; gap: 40px; padding-top: 20px;">
+        <form action="" method="post" enctype="multipart/form-data">
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 20px; gap: 20px;">
+                <span style="padding-left: 30px;">바로 다운로드 --></span>
+                <input type="checkbox" id="isdl" style="width: 40px; height: 40px;" checked>
+                <span><-- Direct Download</span>
+            </div>
+            <div class="file-upload-wrapper" style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 20px; gap: 20px;">
+                <label for="file" class="file-label">Select File</label>
+                <input type="file" id="file" name="file" required>
+                <div id="file-name">...</div>
+            </div>
+            <!-- FFmpeg 옵션들 -->
+            <div id="ex_cmd" style="display: none;">
+                <!-- Bitrate -->
+                <label>Bitrate:</label>
+                <select id="bitrate_select" onchange="toggleCustomInput('bitrate')">
+                    <option value="" selected>Default</option>
+                    <option value="320k">320k</option>
+                    <option value="256k">256k</option>
+                    <option value="224k">224k</option>
+                    <option value="192k">192k</option>
+                    <option value="160k">160k</option>
+                    <option value="128k">128k</option>
+                    <option value="96k">96k</option>
+                    <option value="64k">64k</option>
+                    <option value="32k">32k</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <input type="text" id="bitrate_custom" name="bitrate" style="display:none;"><br><br>
+    
+                <!-- Samplerate -->
+                <label>Samplerate:</label>
+                <select id="samplerate_select" onchange="toggleCustomInput('samplerate')">
+                    <option value="" selected>Default</option>
+                    <option value="48000">48000</option>
+                    <option value="44100">44100</option>
+                    <option value="32000">32000</option>
+                    <option value="24000">24000</option>
+                    <option value="22050">22050</option>
+                    <option value="16000">16000</option>
+                    <option value="12000">12000</option>
+                    <option value="11025">11025</option>
+                    <option value="8000">8000</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <input type="text" id="samplerate_custom" name="samplerate" style="display:none;"><br><br>
+    
+                <!-- Channels -->
+                <label>Channels:</label>
+                <select id="channels_select" onchange="toggleCustomInput('channels')">
+                    <option value="" selected>Default</option>
+                    <option value="2">Stereo (2)</option>
+                    <option value="1">Mono (1)</option>
+                    <!-- <option value="custom">Custom</option> --> <!-- .mp3 (libmp3lame) 코덱에선 2채널이 최대임 -->
+                </select>
+                <input type="text" id="channels_custom" name="channels" style="display:none;"><br><br>
+    
+                <!-- Volume -->
+                <label>Volume (%):</label>
+                <select id="volume_select" onchange="toggleCustomInput('volume')">
+                    <option value="" selected>Default</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="120">120</option>
+                    <option value="150">150</option>
+                    <option value="200">200</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <input type="text" id="volume_custom" name="volume" style="display:none;"><br><br>
+            </div>
+            <button class="large-button" type="button" onclick="startDownload()">Upload</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('file').addEventListener('change', () => {
+            if (document.getElementById('file').files.length > 0) {
+                document.getElementById('ex_cmd').style.display = "block"
+                document.getElementById('file-name').textContent = document.getElementById('file').files[0].name
+            } else {
+                document.getElementById('ex_cmd').style.display = "none"
+                document.getElementById('file-name').textContent = "..."
+            }
+
+            document.getElementById('ex_cmd').style.display = document.getElementById('file').files.length > 0 ? 'block' : 'none';
+        });
+
+        function toggleCustomInput(field) {
+            const select = document.getElementById(`${field}_select`);
+            const customInput = document.getElementById(`${field}_custom`);
+
+            if (select.value === "custom") {
+                customInput.style.display = "inline-block";
+                customInput.disabled = false;
+            } else {
+                customInput.style.display = "none";
+                customInput.disabled = true;
+                customInput.value = select.value;
+            }
+        }
+
+        async function startDownload() {
+            document.getElementById('loadingMessage').style.display = "none";
+            document.querySelectorAll('.large-button').forEach(btn => btn.disabled = true);
+            const isdl = document.getElementById('isdl').checked ? 1 : 0; //체크박스 상태 가져오기
+            const fileInput = document.getElementById('file')
+            const formData = new FormData();
+            if (!fileInput.files.length) {
+                document.querySelectorAll('.large-button').forEach(btn => btn.disabled = false);
+                alert("Select File!");
+                return false;
+            }
+            formData.append('isdl', isdl);
+            Array.from(fileInput.files).forEach((file) => {
+                formData.append('file', file);
+            });
+            document.querySelectorAll('[id*="_custom"]').forEach(e => {
+                formData.append(e.name, e.value)
+            });
+            try {
+                const response = await fetch(window.location.href, {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await response.json();
+                if (!result.job_id) {
+                    alert(`작업 생성 실패\n\n${JSON.stringify(result)}`);
+                    return;
+                }
+                document.getElementById('loadingMessage').style.display = "block";
+                checkStatus(result.job_id);
+            } catch (e) {
+                alert(`요청 실패\n\n${e.message}`);
+            }
+        }
+
+        async function checkStatus(jobId) {
+            let failCount = 0; const maxFailCount = 10
+            const statusUrl = `/job_status?id=${jobId}`;
+            const checkInterval = setInterval(async () => {
+                const response = await fetch(statusUrl);
+                if (!response.ok) {
+                    failCount++;
+                    console.warn(`요청 실패 (${response.status}): ${failCount}/${maxFailCount}`);
+                    if (failCount >= maxFailCount) {
+                        document.querySelectorAll('.large-button').forEach(btn => btn.disabled = false);
+                        clearInterval(checkInterval);
+                        document.querySelectorAll(".spinner").forEach(spinner => {spinner.style.display = "none";});
+                        document.getElementById("progressText").innerHTML = `<h1 style="color: red;">서버로부터 응답을 받을 수 없습니다. 작업이 중단되었습니다.</h1><h1 style="color: red;">Unable to receive response from server. Operation has been stoped.</h1>`
+                        alert("서버로부터 응답을 받을 수 없습니다. 작업이 중단되었습니다.\n\nUnable to receive response from server. Operation has been stoped.");
+                    }
+                    return;
+                }
+                const statusData = await response.json(); failCount = 0;
+                // 진행률이 있으면 표시
+                if (statusData.progress !== undefined) {
+                    const progress = Math.min(100, Math.max(0, parseInt(statusData.progress))); //0~100 보정
+                    document.getElementById("progressPercent").innerText = `${progress}%`;
+                    document.getElementById("progressBar").style.width = `${progress}%`;
+                }
+                if (statusData.status === "done") {
+                    document.querySelectorAll(".spinner").forEach(spinner => {spinner.style.display = "none";});
+                    document.getElementById("progressText").innerText = "Done! 100%"
+                    clearInterval(checkInterval);
+                    window.location.href = statusData.result;
+                } else if (statusData.status === "error") {
+                    clearInterval(checkInterval);
+                    alert(`처리 중 오류 발생\n\n${statusData.result}`);
+                } else {
+                    console.log("처리 중...");
+                }
+            }, 1000);
+        }
+    </script>
+
+    {% include "footer.html" %}
+</body>
+</html>

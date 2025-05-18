@@ -54,6 +54,7 @@
             100% { transform: rotate(360deg); }
         }
     </style>
+
     <script>
         alert("현재 개발중인 사이트 입니다. \n\nThis site is currently under development.")
     </script>
@@ -112,7 +113,7 @@
         async function startDownload(hei) {
             //window.scrollTo({top: 0, behavior: 'smooth'});
             document.getElementById('loadingMessage').style.display = "none";
-            document.querySelectorAll('.large-button').forEach(btn => {btn.disabled = true;});
+            document.querySelectorAll('.large-button').forEach(btn => btn.disabled = true);
             const infoJson = document.getElementById('infoJson').value;
             const isdl = document.getElementById('isdl').checked ? 1 : 0; //체크박스 상태 가져오기
             const formData = new FormData();
@@ -126,13 +127,13 @@
                 });
                 const result = await response.json();
                 if (!result.job_id) {
-                    alert("작업 생성 실패: " + JSON.stringify(result));
+                    alert(`작업 생성 실패\n\n${JSON.stringify(result)}`);
                     return;
                 }
                 document.getElementById('loadingMessage').style.display = "block";
                 checkStatus(result.job_id);
             } catch (e) {
-                alert("요청 실패: " + e.message);
+                alert(`요청 실패\n\n${e.message}`);
             }
         }
 
@@ -145,10 +146,7 @@
                     failCount++;
                     console.warn(`요청 실패 (${response.status}): ${failCount}/${maxFailCount}`);
                     if (failCount >= maxFailCount) {
-                        const btns = document.querySelectorAll('.large-button');
-                        btns.forEach(function(btn) {
-                            btn.disabled = false;
-                        });
+                        document.querySelectorAll('.large-button').forEach(btn => btn.disabled = false);
                         clearInterval(checkInterval);
                         document.querySelectorAll(".spinner").forEach(spinner => {spinner.style.display = "none";});
                         document.getElementById("progressText").innerHTML = `<h1 style="color: red;">서버로부터 응답을 받을 수 없습니다. 작업이 중단되었습니다.</h1><h1 style="color: red;">Unable to receive response from server. Operation has been stoped.</h1>`
@@ -170,7 +168,7 @@
                     window.location.href = statusData.result;
                 } else if (statusData.status === "error") {
                     clearInterval(checkInterval);
-                    alert("처리 중 오류 발생: " + statusData.result);
+                    alert(`처리 중 오류 발생\n\n${statusData.result}`);
                 } else {
                     console.log("처리 중...");
                 }
