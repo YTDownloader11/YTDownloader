@@ -15,7 +15,7 @@ def exceptionE(msg=""): e = traceback.format_exc(); log.error(f"{msg} \n{e}"); r
 def make_app():
     return tornado.web.Application([
         (r"/", MainHandler.handler),
-        (r"/(?:shorts/)?([\w-]{11})", IDHandler.handler),
+        (r"/(?:shorts/|embed/)?([\w-]{11})", IDHandler.handler),
         (r"/watch", IDHandler.handler),
         (r"/job_status", JobStatusHandler.handler),
         (r"/raw/data/(.*)", rawHandler.handler),
