@@ -287,15 +287,6 @@ def saveVideo(YTID: str, hei: int, info: dict, job_id: str) -> str:
     outtmpl = f'data/{YTID}-{hei}p.mp4'
     if os.path.isfile(outtmpl): config.job_status_map[job_id] = {"status": "done", "result": outtmpl, "progress": 100}; return outtmpl
     log.info(f"{outtmpl} 영상 다운로드 중...")
-    """ def progress_hook(d):
-        if d['status'] == 'downloading':
-            total = d.get('total_bytes') or d.get('total_bytes_estimate') or 1
-            downloaded = d.get('downloaded_bytes', 0)
-            progress = int(downloaded * 100 / total)
-            config.job_status_map[job_id] = {"status": "downloading", "result": None, "progress": progress}
-        elif d['status'] == 'finished':
-            config.job_status_map[job_id] = {"status": "processing", "result": None, "progress": 99} """
-
     # 다운로드 단계 추적용
     current_stage = {"step": "video"}
     def progress_hook(d):
@@ -307,7 +298,6 @@ def saveVideo(YTID: str, hei: int, info: dict, job_id: str) -> str:
             elif current_stage["step"] == "audio": progress = int(50 + raw_progress * 0.45)
             else: progress = 95
             config.job_status_map[job_id] = {"status": f"downloading {current_stage["step"]}", "result": None, "progress": progress}
-
         elif d['status'] == 'finished':
             if current_stage["step"] == "video": current_stage["step"] = "audio"  # 다음 단계로 전환
             elif current_stage["step"] == "audio": config.job_status_map[job_id] = {"status": "merging", "result": None, "progress": 95}
@@ -324,9 +314,8 @@ def saveVideo(YTID: str, hei: int, info: dict, job_id: str) -> str:
         'quiet': False,
         'cookiesfrombrowser': ('firefox',)
     }
-    log.debug(ydl_opts)
     with YoutubeDL(ydl_opts) as ydl: ydl.download(YTID)
-    config.job_status_map[job_id] = {"status": "merging", "result": None, "progress": 99}
+    config.job_status_map[job_id] = {"status": "processing", "result": None, "progress": 99}
     return outtmpl
 
 def saveAudio(YTID: str, info: dict, job_id: str) -> str:
@@ -334,6 +323,16 @@ def saveAudio(YTID: str, info: dict, job_id: str) -> str:
     outtmpl = f'data/{YTID}.mp3'
     if os.path.isfile(outtmpl): return outtmpl
     log.info(f"{YTID} 음원 다운로드 중...")
+
+    # 다운로드 단계 추적용
+    def progress_hook(d):
+        if d['status'] == 'downloading':
+            total = d.get('total_bytes') or d.get('total_bytes_estimate') or 1
+            downloaded = d.get('downloaded_bytes', 0)
+            progress = int(downloaded * 100 / total)
+            config.job_status_map[job_id] = {"status": "downloading", "result": None, "progress": progress}
+        elif d['status'] == 'finished':
+            config.job_status_map[job_id] = {"status": "processing", "result": None, "progress": 99}
     ydl_opts = {
         "nocheckcertificate": True,
         'format': info['auInfo'],
@@ -343,6 +342,7 @@ def saveAudio(YTID: str, info: dict, job_id: str) -> str:
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
+        'progress_hooks': [progress_hook],
         'quiet': False,
         'cookiesfrombrowser': ('firefox',)
     }
