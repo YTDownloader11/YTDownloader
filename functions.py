@@ -268,11 +268,11 @@ def getYTID(YTLink: str) -> str:
     return re.match(YTURLPT, YTLink).group("YTID")
 
 def getInfo(YTID: str) -> dict:
-    with YoutubeDL({'quiet': True, 'cookies': 'cookies.txt'}) as ydl: info = ydl.extract_info(YTID, download=False)
+    with YoutubeDL({'quiet': True, 'cookiesfrombrowser': ('firefox',)}) as ydl: info = ydl.extract_info(YTID, download=False)
     auInfo = 0; viInfo = {}
     for i in info.get('formats', []):
-        if i["audio_ext"] == "mp4": auInfo = i['format_id']
-        elif i["video_ext"] == "mp4": viInfo[str(i["height"])] = i["format_id"]
+        if   i["acodec"] != "none" and i["vcodec"] == "none": auInfo = i['format_id']
+        elif i["acodec"] == "none" and i["vcodec"] != "none": viInfo[str(i["height"])] = i["format_id"]
     return {
         "YTID": YTID,
         "YTURL": f"https://youtu.be/{YTID}",
@@ -295,7 +295,7 @@ def saveVideo(YTID: str, hei: int, info: dict, job_id: str) -> str:
             config.job_status_map[job_id] = {"status": "downloading", "result": None, "progress": progress}
         elif d['status'] == 'finished':
             config.job_status_map[job_id] = {"status": "processing", "result": None, "progress": 99} """
-    
+
     # 다운로드 단계 추적용
     current_stage = {"step": "video"}
     def progress_hook(d):
@@ -322,8 +322,9 @@ def saveVideo(YTID: str, hei: int, info: dict, job_id: str) -> str:
         }],
         'progress_hooks': [progress_hook],
         'quiet': False,
-        'cookies': 'cookies.txt'
+        'cookiesfrombrowser': ('firefox',)
     }
+    log.debug(ydl_opts)
     with YoutubeDL(ydl_opts) as ydl: ydl.download(YTID)
     config.job_status_map[job_id] = {"status": "merging", "result": None, "progress": 99}
     return outtmpl
@@ -343,7 +344,7 @@ def saveAudio(YTID: str, info: dict, job_id: str) -> str:
             'preferredquality': '192',
         }],
         'quiet': False,
-        'cookies': 'cookies.txt'
+        'cookiesfrombrowser': ('firefox',)
     }
     with YoutubeDL(ydl_opts) as ydl: ydl.download(YTID)
     return outtmpl
