@@ -4,3 +4,4 @@ mmdbID=GET_To_https://maxmind.com
 mmdbKey=GET_To_https://www.maxmind.com/en/accounts/Your_MaxMind_ID/license-key
 autoDelete=True
 debug=False
+isfixWithMsg=["", ""] #["KoreanMsg", "EnglishMsg"] | Enable(True) when value is filled

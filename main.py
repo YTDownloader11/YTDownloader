@@ -9,18 +9,20 @@ from helpers import getmmdb
 from functions import *
 from handlers import MainHandler, FaviconHandler, StaticHandler, robots_txt, IDHandler, JobStatusHandler, rawHandler
 from handlers import mp4Tomp3Handler
+from handlers import isfixHandler
 
 def exceptionE(msg=""): e = traceback.format_exc(); log.error(f"{msg} \n{e}"); return e
 
 def make_app():
     return tornado.web.Application([
-        (r"/", MainHandler.handler),
-        (r"/(?:shorts/|embed/)?([\w-]{11})", IDHandler.handler),
-        (r"/watch", IDHandler.handler),
+        (r"/", MainHandler.handler if not config.isfix else isfixHandler.handler),
+        (r"/(?:shorts/|embed/)?([\w-]{11})", IDHandler.handler if not config.isfix else isfixHandler.handler),
+        (r"/watch", IDHandler.handler if not config.isfix else isfixHandler.handler),
+
+        (r"/mp4tomp3", mp4Tomp3Handler.handler if not config.isfix else isfixHandler.handler),
+
         (r"/job_status", JobStatusHandler.handler),
         (r"/raw/data/(.*)", rawHandler.handler),
-
-        (r"/mp4tomp3", mp4Tomp3Handler.handler),
 
         (r"/favicon.ico", FaviconHandler.handler),
         (r"/static/(.*)", StaticHandler.handler),

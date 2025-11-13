@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta name="description" content="Fixing">
+    <meta name="keywords" content="youtube, downloader, 유튜브, 유튜브 다운로드">
+    <meta name="language" content="Korean">
+    <meta http-equiv="Content-Language" content="ko">
+    <meta property="og:title" content="Fixing">
+    <meta property="og:description" content="Youtube Downloader">
+    <meta property="og:image" content="https://youtube.com/favicon.ico">
+    <meta property="og:url" content="https://{{ domain }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Youtube Downloader">
+    <meta property="og:locale" content="ko">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixing</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .large-button {
+            width: 140px;
+            height: 50px;
+            font-size: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border-color: #45a049;
+            border-style: solid;
+        }
+        .large-button:hover {
+            background-color: #45a049;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+    </style>
+
+    <script>
+        alert("현재 개발중인 사이트 입니다. \n\nThis site is currently under development.")
+    </script>
+</head>
+<body style="background-color: pink;">
+    <div style="text-align: center;">
+        <h1 id="fixMsg1" style="color: red;"></h1>
+        <br>
+        <h1 id="fixMsg2" style="color: red;"></h1>
+    </div>
+
+    <script>
+        const isfixWithMsg = {% raw isfixWithMsg %} //tornado json 가져오기
+        document.getElementById("fixMsg1").innerText = isfixWithMsg[0]
+        document.getElementById("fixMsg2").innerText = isfixWithMsg[1]
+    </script>
+
+    {% include "footer.html" %}
+</body>
+</html>
