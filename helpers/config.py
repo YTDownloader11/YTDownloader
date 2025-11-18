@@ -19,6 +19,7 @@ try: #.env
     port = int(os.getenv("port"))
     mmdbID = os.getenv("mmdbID")
     mmdbKey = os.getenv("mmdbKey")
+    useFirefoxCookie = eval(os.getenv("useFirefoxCookie"))
     autoDelete = eval(os.getenv("autoDelete"))
     debug = eval(os.getenv("debug"))
     isfixWithMsg = eval(os.getenv("isfixWithMsg"))

@@ -270,7 +270,7 @@ def getYTID(YTLink: str) -> str:
 def getInfo(YTID: str) -> dict:
     ydl_opts = {
         'quiet': True,
-        'cookiesfrombrowser': ('firefox',),
+        'cookiesfrombrowser': ('firefox',) if config.useFirefoxCookie else None,
         'js_runtimes': {'deno': {'path': 'ejs/deno.exe'}}
     }
     with YoutubeDL(ydl_opts) as ydl: info = ydl.extract_info(YTID, download=False)
@@ -317,7 +317,7 @@ def saveVideo(YTID: str, hei: int, info: dict, job_id: str) -> str:
         }],
         'progress_hooks': [progress_hook],
         'quiet': False,
-        'cookiesfrombrowser': ('firefox',),
+        'cookiesfrombrowser': ('firefox',) if config.useFirefoxCookie else None,
         'js_runtimes': {'deno': {'path': 'ejs/deno.exe'}}
     }
     with YoutubeDL(ydl_opts) as ydl: ydl.download(YTID)
@@ -350,7 +350,7 @@ def saveAudio(YTID: str, info: dict, job_id: str) -> str:
         }],
         'progress_hooks': [progress_hook],
         'quiet': False,
-        'cookiesfrombrowser': ('firefox',),
+        'cookiesfrombrowser': ('firefox',) if config.useFirefoxCookie else None,
         'js_runtimes': {'deno': {'path': 'ejs/deno.exe'}}
     }
     with YoutubeDL(ydl_opts) as ydl: ydl.download(YTID)
