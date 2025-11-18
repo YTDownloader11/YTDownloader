@@ -10,6 +10,7 @@ def denodl():
     if config.OSisWindows:
         target = "x86_64-pc-windows-msvc"
         delCmd = "del /f /q deno.zip"
+        fileName = "deno.exe"
     else:
         uname = os.popen("uname -sm").read().strip()
         if uname == "Darwin x86_64": target = "x86_64-apple-darwin"
@@ -17,10 +18,12 @@ def denodl():
         elif uname == "Linux aarch64": target = "aarch64-unknown-linux-gnu"
         else: target = "x86_64-unknown-linux-gnu"
         delCmd = "sudo rm -rf deno.zip"
+        fileName = "deno"
 
     r = requests.get(f"https://dl.deno.land/release/{iv}/deno-{target}.zip").content
     with open("deno.zip", "wb") as f: f.write(r)
-    with zipfile.ZipFile("deno.zip", 'r') as Zip: Zip.extract("deno.exe", "ejs")
+    with zipfile.ZipFile("deno.zip", 'r') as Zip: Zip.extract(fileName, "ejs")
+    if not config.OSisWindows: os.replace("ejs/deno", "ejs/deno.exe")
     os.system(delCmd)
 
 def dl():
