@@ -2,9 +2,7 @@ import os
 import traceback
 import tornado.ioloop
 import tornado.web
-from helpers import logUtils as log
-from helpers import config
-from helpers import getmmdb
+from helpers import logUtils as log, config, getmmdb, getdeno
 
 from functions import *
 from handlers import MainHandler, FaviconHandler, StaticHandler, robots_txt, IDHandler, JobStatusHandler, rawHandler
@@ -32,7 +30,7 @@ def make_app():
     debug=config.debug)
 
 if __name__ == "__main__":
-    getmmdb.dl()
+    getmmdb.dl(); getdeno.dl()
     folder_check(); autoDel()
     app = make_app()
     app = tornado.httpserver.HTTPServer(app, max_body_size=1024**3*10)

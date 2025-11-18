@@ -268,7 +268,12 @@ def getYTID(YTLink: str) -> str:
     return re.match(YTURLPT, YTLink).group("YTID")
 
 def getInfo(YTID: str) -> dict:
-    with YoutubeDL({'quiet': True, 'cookiesfrombrowser': ('firefox',)}) as ydl: info = ydl.extract_info(YTID, download=False)
+    ydl_opts = {
+        'quiet': True,
+        'cookiesfrombrowser': ('firefox',),
+        'js_runtimes': {'deno': {'path': 'ejs/deno_v2.5.6.exe'}}
+    }
+    with YoutubeDL(ydl_opts) as ydl: info = ydl.extract_info(YTID, download=False)
     auInfo = 0; viInfo = {}
     for i in info.get('formats', []):
         if   i["acodec"] != "none" and i["vcodec"] == "none": auInfo = i['format_id']
@@ -312,7 +317,8 @@ def saveVideo(YTID: str, hei: int, info: dict, job_id: str) -> str:
         }],
         'progress_hooks': [progress_hook],
         'quiet': False,
-        'cookiesfrombrowser': ('firefox',)
+        'cookiesfrombrowser': ('firefox',),
+        'js_runtimes': {'deno': {'path': 'ejs/deno_v2.5.6.exe'}}
     }
     with YoutubeDL(ydl_opts) as ydl: ydl.download(YTID)
     config.job_status_map[job_id] = {"status": "processing", "result": None, "progress": 99}
@@ -344,7 +350,8 @@ def saveAudio(YTID: str, info: dict, job_id: str) -> str:
         }],
         'progress_hooks': [progress_hook],
         'quiet': False,
-        'cookiesfrombrowser': ('firefox',)
+        'cookiesfrombrowser': ('firefox',),
+        'js_runtimes': {'deno': {'path': 'ejs/deno_v2.5.6.exe'}}
     }
     with YoutubeDL(ydl_opts) as ydl: ydl.download(YTID)
     return outtmpl
