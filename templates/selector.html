@@ -165,7 +165,7 @@
                     document.querySelectorAll(".spinner").forEach(spinner => {spinner.style.display = "none";});
                     document.getElementById("progressText").innerText = "Done! 100%"
                     clearInterval(checkInterval);
-                    window.location.href = statusData.result;
+                    window.location.href = `${window.location.origin}/${statusData.result}`
                 } else if (statusData.status === "error") {
                     clearInterval(checkInterval);
                     alert(`처리 중 오류 발생\n\n${statusData.result}`);

@@ -11,5 +11,4 @@ class handler(tornado.web.RequestHandler):
         if not job_id or job_id not in config.job_status_map:
             self.set_status(404); self.write({"error": "job_id not found"}); return
 
-        res = config.job_status_map.pop(job_id) if config.job_status_map[job_id]["status"] == "done" or config.job_status_map[job_id]["progress"] == 100 else config.job_status_map[job_id]
-        self.write(res)
+        self.write(config.job_status_map.pop(job_id) if config.job_status_map[job_id]["status"] == "done" else config.job_status_map[job_id])

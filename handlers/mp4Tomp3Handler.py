@@ -46,7 +46,7 @@ class handler(tornado.web.RequestHandler):
             async def background_task(): #백그라운드 작업 수행
                 try:
                     result = await asyncio.to_thread(mp4Tomp3, f"data/{form["filename"]}", ex_cmd, job_id)
-                    config.job_status_map[job_id] = {"status": "done", "result": f"https://{config.domain}/raw/{result}?dl={isdl}", "progress": 100}
+                    config.job_status_map[job_id] = {"status": "done", "result": f"raw/{result}?dl={isdl}", "progress": 100}
                 except Exception as e:
                     config.job_status_map[job_id] = {"status": "error", "result": str(e), "progress": -1}
             asyncio.create_task(background_task())
