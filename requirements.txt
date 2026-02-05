@@ -1,5 +1,5 @@
-yt-dlp===2025.11.12
-yt-dlp-ejs===0.3.1
+yt-dlp===2026.2.4
+yt-dlp-ejs===0.4.0
 requests===2.32.3
 pyinstaller===6.11.1
 m3u8===6.0.0
