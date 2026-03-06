@@ -1,16 +1,8 @@
-import os
-import shutil
-import re
-import time
+import os, psutil, shutil, re, time, json, traceback, threading, subprocess
 from datetime import datetime
-import json
-import traceback
-import threading
-from helpers import logUtils as log
-from helpers import config
+from helpers import config, logUtils as log
 import geoip2.database
 from yt_dlp import YoutubeDL
-import subprocess
 from pydub.utils import mediainfo
 
 def exceptionE(msg=""): e = traceback.format_exc(); log.error(f"{msg} \n{e}"); return e
@@ -55,16 +47,15 @@ def getRequestInfo(self):
     try:
         request_url = self.request.headers["X-Forwarded-Proto"] + "://" + self.request.host + self.request.uri
         country_code = self.request.headers["Cf-Ipcountry"]
-        IsCloudflare = IsNginx = True
+        IsCloudflare = True
         Server = "Cloudflare"
     except Exception as e:
         log.warning(f"cloudflare를 거치지 않음, real_ip는 nginx header에서 가져옴 | e = {e}")
         try:
             request_url = self.request.headers["X-Forwarded-Proto"] + "://" + self.request.host + self.request.uri
             IsNginx = True
-            if config.OSisWindows:
-                try: Server = os.popen("nginx.exe -v 2>&1").read().split(":")[1].strip()
-                except: ngp = os.getcwd().replace(os.getcwd().split("\\")[-1], "nginx/nginx.exe").replace("\\", "/"); Server = os.popen(f'{ngp} -v 2>&1').read().split(":")[1].strip()
+            nginx_path = next((p.info['exe'] for p in psutil.process_iter(['name', 'exe']) if p.info['name'] == 'nginx.exe'), None)
+            if config.OSisWindows: Server = os.popen(f"{nginx_path} -v 2>&1").read().split(":")[1].strip()
             else: Server = os.popen("nginx -v 2>&1").read().split(":")[1].strip()
         except Exception as e:
             log.warning(f"http로 접속시도함 | cloudflare를 거치지 않음, real_ip는 http 요청이라서 바로 뜸 | e = {e}")
@@ -250,7 +241,7 @@ def autoDel():
     def wk():
         while config.autoDelete:
             now = datetime.now()
-            if now.weekday() == 0 and now.hour == 0 and now.minute == 0:
+            if now.weekday() == 0 and now.hour == 0:
                 config.job_status_map = {}
                 for d in os.listdir("data"):
                     try: os.remove(f"data/{d}"); log.info(f"data/{d} 삭제완료!")
